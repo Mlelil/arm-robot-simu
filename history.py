@@ -78,3 +78,36 @@ class MotionHistory:
         Renvoie l'historique des valeurs pour l'affichage des courbes
         """
         return self.history
+
+
+
+
+# ==========================================
+# ZONE DE TEST
+# ==========================================
+if __name__ == "__main__":
+    motion = MotionHistory()
+    
+    # On simule les fausses données
+    t_test = 0.5
+    pos_test = np.array([10.0, 5.0, 2.0])
+    vel_test = np.array([0.1, 0.0, -0.1])
+    q_test = np.array([1.57, 0.5, -0.5, 0.0])
+    qdot_test = np.array([0.01, 0.02, 0.0, 0.0])
+    metrics_test = {
+        "sigma_min": 0.5,
+        "sigma_max": 2.0,
+        "cond_J": 4.0,
+        "det(JJT)": 1.5,
+        "error_norm": 0.05,
+        "||q_dot||": 0.022
+    }
+    
+    # On teste sotcker
+    motion.stocker(t_test, pos_test, vel_test, q_test, qdot_test, metrics_test)
+    
+    # On teste get
+    data = motion.get()
+    print("Temps enregistré :", data["t"])
+    print("Position X enregistrée :", data["x"])
+    print("Sigma Min enregistré :", data["sigma_min"])
