@@ -1,5 +1,6 @@
 import numpy as np
 from math import cos, sin 
+from typing import Tuple
 
 class Robot:
     def __init__(self, arm_length:np.ndarray, joint_ranges:np.ndarray):
@@ -18,6 +19,11 @@ class Robot:
         lij = li + lj
         cij = cos(qi + qj) / sij = sin(qi + qj)
         """
+
+        if self.motion_allowed(q) == False :
+            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        
+
         q1, q2, q3, _ = q
         _, l2, l3, l4 = self.length
 
@@ -36,6 +42,10 @@ class Robot:
         """
         Computes the forward kinematic problem for all the joints
         """
+
+        if self.motion_allowed(q) == False :
+            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        
         q1, q2, q3, q4 = q
         l1, l2, l3, l4 = self.length
         l34 = l3 + l4
@@ -64,6 +74,10 @@ class Robot:
         """
         Computes the global rotational matrix of the arm
         """
+        
+        if self.motion_allowed(q) == False :
+            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+
         # La matrice de rotation globale est simplifiée pour l'affichage
         q1, q2, q3, q4 = q
         q23 = q2 + q3
@@ -79,6 +93,10 @@ class Robot:
         """
         Computes the Jacobian matrix
         """
+
+        if self.motion_allowed(q) == False :
+            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        
         q1, q2, q3, _ = q
         _, l2, l3, l4 = self.length
 
@@ -102,3 +120,23 @@ class Robot:
             [0,           -c1,        -c1,    s1*c23],
             [1,             0,         0,        s23]
         ])
+    
+    def motion_allowed(self, q:np.ndarray) -> bool:
+        """
+        Renvoie True si le mouvement est dans les bornes physiques 
+        """
+        
+        def between(x:float, bornes:Tuple[float, float]):
+            """
+            Renvoie True si x est compris dans les bornes
+            """
+            a, b = min(bornes), max(bornes)
+            return (a <= x and x <= b)
+        
+
+        logik = True    # contient la somme booléenne de tous les tests
+        for i, qi in enumerate(q):
+            logik = logik and between(qi, self.ranges[i])
+        
+        return logik
+
