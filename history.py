@@ -91,7 +91,7 @@ class MotionHistory:
 
 
 # ==========================================
-# ZONE DE TEST
+# ZONE DE TEST (éxécuté uniquement lorsque l'on lance le fichier seul)
 # ==========================================
 if __name__ == "__main__":
     motion = MotionHistory()
