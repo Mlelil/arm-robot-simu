@@ -37,7 +37,6 @@ class Robot:
 
         return np.array([x, y, z])
 
-
     def complete_forward_kinematics(self, q:np.ndarray[float]) -> np.ndarray:
         """
         Computes the forward kinematic problem for all the joints
@@ -140,3 +139,24 @@ class Robot:
         
         return logik
 
+
+
+# ==========================================
+# ZONE DE TEST
+# ==========================================
+if __name__ == "__main__":
+    length = np.array([9, 15, 15, 10])
+    ranges = [(-180, 180), (0, 180), (-180, 180), (-180, 180)]
+    robot = Robot(length, ranges)
+
+    # R: Ok
+    q = np.array([0, 0, 0, 0])
+    print("Mouvement autorisé" if robot.motion_allowed(q) else "Mouvement non autorisé")
+
+    # R: non OK
+    q = np.array([-1000, 0, 0, 0])
+    print("Mouvement autorisé" if robot.motion_allowed(q) else "Mouvement non autorisé")
+
+    # R: non ok
+    q = np.array([-1000, -10, 0, 0])
+    print("Mouvement autorisé" if robot.motion_allowed(q) else "Mouvement non autorisé")
