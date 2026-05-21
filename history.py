@@ -6,6 +6,7 @@ from typing import Dict
 class MotionHistory:
     def __init__(self, maxlen: int = 500):
         self.maxlen = maxlen
+        self.traj_x, self.traj_y, self.traj_z = [], [], []  # Trajectoire de la main
         self.history = {
             "t":deque(maxlen=maxlen),
 
@@ -79,6 +80,13 @@ class MotionHistory:
         """
         return self.history
 
+    def clear_traj(self):
+        self.traj_x, self.traj_y, self.traj_z = [], [], []
+    
+    def append_traj(self, x:float, y:float, z:float):
+        self.traj_x.append(x)
+        self.traj_y.append(y)
+        self.traj_z.append(z)
 
 
 
