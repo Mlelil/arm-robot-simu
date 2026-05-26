@@ -1,18 +1,30 @@
 import numpy as np
 from numpy.typing import NDArray
 from math import radians, degrees, cos, sin, sqrt
-
+from time import time
 
 class Controller:
     def __init__(self, tuning:float=4.0):
-        self.tuning = tuning
-        self.x0         : np.ndarray
-        self.xf         : np.ndarray
-        self.T          : np.float64
-        self.t_start    : np.float64
-        self.t_prev     : np.float64
-        self.q_state    : NDArray[np.float64]
-        self.old_qdot   : NDArray[np.float64]
+        self.tuning = tuning                    # A définir, variables des filtres
+        self.x0         : np.ndarray            # Position initiale du mouvement
+        self.xf         : np.ndarray            # Position finale du mouvement
+        self.T          : float                 # Durée totale du mouvement
+        self.t_start    : float                 # Instant de départ
+        self.t_prev     : float                 # Instant d'arrivée
+        self.q          : NDArray[np.float64]   # Position articulaire à l'instant t
+        self.old_qdot   : NDArray[np.float64]   # Position articulaire à l'instant t-1
+
+    def start_motion(self, x0:NDArray[np.float64], xf:NDArray[np.float64], vmax=2.0):
+        """Initialise toutes les variables pour commencer le mouvement
+        à partir de la position actuelle, de la position finale et de la vitesse
+        maximale lors du mouvement"""
+
+        self.x0 = x0
+        self.xf = xf
+        self.T = max(float(np.linalg.norm(xf-x0)) / vmax, 1.0)
+        self.t_start = time()
+        self.t_prev = self.t_start
+
 
     def quintic_traj(self, t:np.float64, T:np.float64, X0:NDArray[np.float64], Xf:NDArray[np.float64]):
         """ Calcule la consigne de position et de vitesse à un instant t pour aller
@@ -77,7 +89,12 @@ class Controller:
     def DLS(self):
         #TODO
         pass
-    
+
+    def step(self, q:NDArray[np.float64], t:float):
+        """ Calcule la vitesse articulaire q_dot à envoyer aux moteurs pour l'instant t+1
+        """
+        pass
+
     def is_motion_finished(self) -> bool:
         """ #TODO
         Renvoir True si le mouvement est terminé pour l'afficher ou débloquer les actions permises à l'arrêt
