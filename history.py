@@ -36,7 +36,9 @@ class MotionHistory:
             "||q_dot||":deque([0], maxlen=maxlen)
         } 
 
-
+    def reset(self):
+        """Supprime toutes les valeurs enregistrées"""
+        self.__init__(self.maxlen)
 
     def stocker(self, t:int, pos:np.ndarray, vel:np.ndarray, q:np.ndarray, qdot:np.ndarray, metrics:Dict[str, float]):
         """
@@ -72,7 +74,6 @@ class MotionHistory:
         self.history["det(JJT)"].append(metrics["det(JJT)"])
         self.history["error_norm"].append(metrics["error_norm"])
         self.history["||q_dot||"].append(metrics["||q_dot||"])
-
 
     def get(self) -> Dict[str, float]:
         """
