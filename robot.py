@@ -1,14 +1,21 @@
 import numpy as np
+from numpy.typing import NDArray
 from math import cos, sin 
-from typing import Tuple
 
 class Robot:
-    def __init__(self, arm_length:np.ndarray, joint_ranges:np.ndarray):
+    def __init__(
+            self,
+            arm_length:NDArray[np.float64],
+            joint_ranges:NDArray
+        ):
         self.length = arm_length
         self.ranges = joint_ranges
 
 
-    def forward_kinematics(self, q:np.ndarray[float]) -> np.ndarray:
+    def forward_kinematics(
+        self,
+        q:NDArray[np.float64]
+    ) -> NDArray[np.float64]:
         """
         Computes the forward kinematic problem for the end effector
         """
@@ -20,8 +27,8 @@ class Robot:
         cij = cos(qi + qj) / sij = sin(qi + qj)
         """
 
-        if self.motion_allowed(q) == False :
-            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        if not self.motion_allowed(q):
+            raise ValueError("Le mouvement est impossible: q ne respecte pas les limites imposées")
         
 
         q1, q2, q3, _ = q
@@ -37,7 +44,10 @@ class Robot:
 
         return np.array([x, y, z])
 
-    def complete_forward_kinematics(self, q:np.ndarray) -> tuple[np.ndarray[np.float64], np.ndarray[float64], np.ndarray[float64]]:
+    def complete_forward_kinematics(
+            self,
+            q:np.ndarray
+        ) -> tuple[NDArray[np.float64], NDArray[np.float64], NDArray[np.float64]]:
         """
         Computes the forward kinematic problem for all the joints
         """
@@ -52,7 +62,7 @@ class Robot:
         c2, s2 = cos(q2), sin(q2)
         c23, s23 = cos(q2 + q3), sin(q2 + q3)
 
-        xs, ys, zs = np.zeros(4), np.zeros(4), np.zeros(4)
+        xs, ys, zs = np.zeros(5), np.zeros(5), np.zeros(5)
         
         # p2 (Coude)
         xs[2] = l2 * c1 * c2
@@ -69,7 +79,7 @@ class Robot:
 
         return xs, ys, zs
 
-    def compute_rotation(self, q:np.ndarray) -> np.ndarray:
+    def compute_rotation(self, q:NDArray[np.float64]):
         """
         Computes the global rotational matrix of the arm
         """
@@ -125,7 +135,7 @@ class Robot:
         Renvoie True si le mouvement est dans les bornes physiques 
         """
         
-        def between(x:float, bornes:Tuple[float, float]):
+        def between(x:np.float64, bornes:NDArray[np.float64]):
             """
             Renvoie True si x est compris dans les bornes
             """
@@ -146,7 +156,7 @@ class Robot:
 # ==========================================
 if __name__ == "__main__":
     length = np.array([9, 15, 15, 10])
-    ranges = [(-180, 180), (0, 180), (-180, 180), (-180, 180)]
+    ranges = np.array([(-180, 180), (0, 180), (-180, 180), (-180, 180)])
     robot = Robot(length, ranges)
 
     # R: Ok
