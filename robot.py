@@ -52,7 +52,7 @@ class Robot:
         c2, s2 = cos(q2), sin(q2)
         c23, s23 = cos(q2 + q3), sin(q2 + q3)
 
-        xs, ys, zs = [0]*5, [0]*5, [0]*5 
+        xs, ys, zs = np.zeros(4), np.zeros(4), np.zeros(4)
         
         # p2 (Coude)
         xs[2] = l2 * c1 * c2
