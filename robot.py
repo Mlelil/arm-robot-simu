@@ -37,7 +37,7 @@ class Robot:
 
         return np.array([x, y, z])
 
-    def complete_forward_kinematics(self, q:np.ndarray[float]) -> np.ndarray:
+    def complete_forward_kinematics(self, q:np.ndarray) -> tuple[np.ndarray[np.float64], np.ndarray[float64], np.ndarray[float64]]:
         """
         Computes the forward kinematic problem for all the joints
         """
