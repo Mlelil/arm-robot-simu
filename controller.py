@@ -172,7 +172,7 @@ class Controller:
         if norm > max_norm :
             qdot = qdot * (max_norm/norm)
         
-        return 4
+        return qdot
 
 
 
