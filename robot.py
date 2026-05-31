@@ -148,6 +148,12 @@ class Robot:
             logik = logik and between(qi, self.ranges[i])
         
         return logik
+    
+    def sigma_min_value(self, q_state):
+        """Calcule et renvoie la valeur de sigma_min dans la configuration actuelle"""
+        J = self.jacobian(q)[0:3, :]
+        S = np.linalg.svd(J, compute_uv=False)
+        return S.min()
 
 
 
