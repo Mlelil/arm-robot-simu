@@ -6,11 +6,12 @@ from robot import Robot
 
 
 default_tuning = {
-    "K_p"            : 4.0,
-    "K_DLS"          : 5.0,
-    "K_secondary"    : 0.5,
-    "sigma_min_safe" : 0.6,
-    "max_norm"       : 1.2
+    "K_p"                       : 4.0,
+    "K_DLS"                     : 5.0,
+    "K_secondary_singularity"   : 0.5,
+    "K_secondary_joint"         : 5.0,
+    "sigma_min_safe"            : 0.6,
+    "max_norm"                  : 1.2
 }
 
 
@@ -81,19 +82,47 @@ class Controller:
 
     def _sigma_min_gradient(self, q, eps=1e-5): #TODO clean
         """Calcule le gradient de w(q) = s_min(q)"""
-        s0 = self.robot.sigma_min(q)    # TODO ajouter cette fonction dans la classe Robot
+        s0 = self.robot.sigma_min_value(q)    # TODO ajouter cette fonction dans la classe Robot
         grad = np.zeros_like(q)
 
         for i in range(len(grad)):
             dq = np.zeros_like(q)
             dq[i] = eps
-            s1 = self.robot.sigma_min(q + dq)
+            s1 = self.robot.sigma_min_value(q + dq)
             grad[i] = (s1 - s0) / eps
         
         return grad
     
-    def _nulls_space_joint(self, q, qmin, qmax, k): #TODO
-        pass
+
+    def _null_space_joint(self, ranges, k=5.0):
+        """Optimisation dans l'espace nul de J_dls pour éviter les butées mécaniques"""
+        # ATTENTION !!! on n'oublie pas qu'il faut prendre le GRADIENT de la fonction de coût
+        q_min = np.array([range[0] for range in ranges])
+        q_max = np.array([range[1] for range in ranges])
+
+        q_min = np.radians(q_min)
+        q_max = np.radians(q_max)
+
+        temp = self.q_state - 0.5 * (q_max + q_min)
+        range = 0.5 * (q_max - q_min)
+        return - 2 * k * temp / (range **2)
+
+
+    def _null_space_singularity(self, k):
+        """Optimisation dans l'espace nul de J_dls pour éviter les singularités aka les positions avec sigma_min faible"""
+        grad_sigma_min = self._sigma_min_gradient(self.q_state)
+        activation = max(0, 1.0 - self.robot.sigma_min_value(self.q_state) / self.tuning["sigma_min_safe"]) # gain adaptatif : nul loin des singularités, croît quand on approche
+        return k * activation
+
+    def _dls_inverse(self, J, sigma_min):
+        """Calcule  Pseudo inverse amortie adaptatif (adaptative DLS)"""
+        if sigma_min >= self.tuning["sigma_min_safe"] :
+            lam = 0
+        else :
+            lam = self.tuning["K_DLS"] * (1 - sigma_min / self.tuning["sigma_min_safe"])**2 #TODO essayer avec et sans le carré pour voir
+        return  J.T @ np.linalg.inv(J @ J.T + lam * np.eye(3))
+
+
 
     def compute_qdot(self): #TODO couper cette fonction en plusieurs fonctions atomiques dans l'optique de les tuner différemment
         """ Calcule les vitesses articulaires à commander à instant t pour atteindre 
@@ -105,10 +134,10 @@ class Controller:
 
         # On récupère l'état de la cinématique actuelle
         J = self.robot.jacobian(self.q_state)[0:3, :]     # Contrôle de la vitesse uniquement, pas de rotation
-        x = self.robot.forward_kinematics(self.q_state)
+        X = self.robot.forward_kinematics(self.q_state)
         
         # Calcul du gain proportionnel effectif Kp (diminue près des singularités)
-        sigma_min = self.robot.sigma_min(self.q_state)
+        sigma_min = self.robot.sigma_min_value(self.q_state)
         scale = min(1.0, sigma_min/self.tuning["sigma_min_safe"])
         Kp_eff = self.tuning["K_p"] * scale
 
@@ -116,31 +145,26 @@ class Controller:
         X_desire, V_desire = self.quintic_traj(self.t, self.T, self.x0, self.xf)
         V = self.cartesian_controller(X, X_desire, V_desire, Kp_eff)
 
-        # Pseudo inverse amortie adaptatif (adaptative DLS)
-        if sigma_min >= self.tuning["sigma_min_safe"] :
-            lam = 0
-        else :
-            lam = self.tuning["K_DLS"] * (1 - sigma_min / self.tuning["sigma_min_safe"])**2 #TODO essayer avec et sans le carré pour voir
-        
-        J_dls = J.T @ np.linalg.inv(J @ J.T + lam * np.eye(3))
+        # DLS inverse
+        J_dls = self._dls_inverse(J, sigma_min)
 
-         # Tâche secondaire / null_space_opti
-        z = _nulls_space_joint(self.q_state, q_min, q_max, k=5) # TODO à récupérer de robot.ranges
-        NullSpace = np.eye(4) - J_dls @ J
+        # Tâche secondaire pour éviter les butées mécaniques
+        z = self._null_space_joint(self.robot.ranges, self.tuning["K_secondary_joint"])    #TODO à supprimer ou utiliser
 
         # Tâche secondaire pour éviter les singularités
-        grad_sigma_min = self._sigma_min_gradient(q)
-        activation = max(0, 1.0 - sigma_min/self.tuning["sigma_min_safe"]) # gain adaptatif : nul loin des singularités, croît quand on approche
-        km_eff = self.tuning["K_secondary"] * activation
+        km_eff = self._null_space_singularity(self.tuning["K_secondary_singularity"])
 
         # Normalisation du gradiant pour la stabilité
-        norm_grad = np.linalg.norm(grad_sigma_min)
-        if norm_grad > 1e-8 :
-            #print(f"Norm of grad_sigma_min = {norm_grad:.1f} and the qdot norm contribution is : {np.linalg.norm(km * NullSpace @ grad_smin)}")
-            grad_sigma_min /= norm_grad
+        # norm_grad = np.linalg.norm(grad_sigma_min)
+        # if norm_grad > 1e-8 :
+        #     #print(f"Norm of grad_sigma_min = {norm_grad:.1f} and the qdot norm contribution is : {np.linalg.norm(km * NullSpace @ grad_smin)}")
+        #     grad_sigma_min /= norm_grad
+
 
         # Calcul de qdot
-        qdot = J_dls @ xdot + km_eff * NullSpace @ grad_sigma_min #+  NullSpace @ z
+        NullSpace = np.eye(4) - J_dls @ J
+        grad_sigma_min = self._sigma_min_gradient(self.q_state)
+        qdot = J_dls @ V + km_eff * NullSpace @ grad_sigma_min #+  NullSpace @ z
 
         # Limitation de qdot : on garde l'orientation du vecteur, mais on change sa norme
         norm = np.linalg.norm(qdot)
