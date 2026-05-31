@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.typing import NDArray
 from math import radians, degrees, cos, sin, sqrt
-from time import time
 from robot import Robot
 
 
@@ -16,19 +15,20 @@ default_tuning = {
 
 
 class Controller:
-    def __init__(self, robot: Robot, tuning: dict[str, float]=default_tuning):
+    def __init__(self, robot: Robot, tuning: dict[str, float]=default_tuning, q_state=np.zeros(4)):
         self.robot = robot
         self.tuning = tuning                    # Variables de contrôle
+        self.q_state    = q_state               # Position articulaire à l'instant t
         self.x0         : np.ndarray            # Position initiale du mouvement
         self.xf         : np.ndarray            # Position finale du mouvement
         self.t          : float                 # Instant t du mouvement
         self.T          : float                 # Durée totale du mouvement
         self.t_start    : float                 # Instant de départ
         self.t_prev     : float                 # Instant d'arrivée
-        self.q_state    : NDArray[np.float64]   # Position articulaire à l'instant t
         self.old_qdot   : NDArray[np.float64]   # Position articulaire à l'instant t-1
+        self.motion_done: bool                  # Faux si un mouvement est en cours
 
-    def start_motion(self, x0:NDArray[np.float64], xf:NDArray[np.float64], vmax=2.0):
+    def start_motion(self, t_start:float, x0:NDArray[np.float64], xf:NDArray[np.float64], vmax=2.0):
         """Initialise toutes les variables pour commencer le mouvement
         à partir de la position actuelle, de la position finale et de la vitesse
         maximale lors du mouvement"""
@@ -36,8 +36,9 @@ class Controller:
         self.x0 = x0
         self.xf = xf
         self.T = max(float(np.linalg.norm(xf-x0)) / vmax, 1.0)
-        self.t_start = time()
+        self.t_start = t_start
         self.t_prev = self.t_start
+
 
     def quintic_traj(self, t:float, T:float, X0:NDArray[np.float64], Xf:NDArray[np.float64]):
         """ Calcule la consigne de position et de vitesse à un instant t pour aller
@@ -123,7 +124,6 @@ class Controller:
         return  J.T @ np.linalg.inv(J @ J.T + lam * np.eye(3))
 
 
-
     def compute_qdot(self): #TODO couper cette fonction en plusieurs fonctions atomiques dans l'optique de les tuner différemment
         """ Calcule les vitesses articulaires à commander à instant t pour atteindre 
         les vitesses cartésiennes désirées
@@ -175,19 +175,24 @@ class Controller:
         return qdot
 
 
-
-
-    def step(self, q:NDArray[np.float64], t:float):
+    def step(self, t:float):
         """ Calcule la vitesse articulaire q_dot à envoyer aux moteurs pour l'instant t+1
         """
-        self.q_state = q
-        self.t = t
-        qdot = self.compute_qdot()
-        self.q_dot = qdot 
-        return qdot
 
-    def is_motion_finished(self) -> bool:
-        """ #TODO
-        Renvoir True si le mouvement est terminé pour l'afficher ou débloquer les actions permises à l'arrêt
-        """
-        return True
+        # Boucle temporelle
+        self.t = t
+        dt = self.t - self.t_prev
+        self.t_prev = self.t
+
+        if self.t - self.t_start > self.T : self.motion_done = True
+
+        if self.motion_done :
+            # Calcul de l'erreur MSE
+            # Renvoyer la position finale
+            return
+
+        self.qdot = self.compute_qdot()
+        self.q_state += self.qdot * dt
+        return
+
+
