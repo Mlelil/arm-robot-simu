@@ -16,17 +16,17 @@ default_tuning = {
 
 class Controller:
     def __init__(self, robot: Robot, tuning: dict[str, float]=default_tuning, q_state=np.zeros(4)):
-        self.robot = robot
-        self.tuning = tuning                    # Variables de contrôle
-        self.q_state    = q_state               # Position articulaire à l'instant t
+        self.robot       = robot                # Dépendance de la classe Robot
+        self.tuning      = tuning               # Variables de contrôle
+        self.q_state     = q_state              # Position articulaire à l'instant t
+        self.motion_done = False                # Faux si un mouvement est en cours
         self.x0         : np.ndarray            # Position initiale du mouvement
         self.xf         : np.ndarray            # Position finale du mouvement
         self.t          : float                 # Instant t du mouvement
         self.T          : float                 # Durée totale du mouvement
         self.t_start    : float                 # Instant de départ
         self.t_prev     : float                 # Instant d'arrivée
-        self.old_qdot   : NDArray[np.float64]   # Position articulaire à l'instant t-1
-        self.motion_done: bool                  # Faux si un mouvement est en cours
+        
 
     def start_motion(self, t_start:float, x0:NDArray[np.float64], xf:NDArray[np.float64], vmax=2.0):
         """Initialise toutes les variables pour commencer le mouvement
@@ -95,9 +95,11 @@ class Controller:
         return grad
     
 
-    def _null_space_joint(self, ranges, k=5.0):
+    def _null_space_joint(self):
         """Optimisation dans l'espace nul de J_dls pour éviter les butées mécaniques"""
         # ATTENTION !!! on n'oublie pas qu'il faut prendre le GRADIENT de la fonction de coût
+
+        ranges = self.robot.ranges
         q_min = np.array([range[0] for range in ranges])
         q_max = np.array([range[1] for range in ranges])
 
@@ -105,15 +107,15 @@ class Controller:
         q_max = np.radians(q_max)
 
         temp = self.q_state - 0.5 * (q_max + q_min)
-        range = 0.5 * (q_max - q_min)
-        return - 2 * k * temp / (range **2)
+        q_ranges = 0.5 * (q_max - q_min)
+        return - 2 * self.tuning["K_secondary_joint"] * temp / (q_ranges **2)
 
 
-    def _null_space_singularity(self, k):
+    def _null_space_singularity(self):
         """Optimisation dans l'espace nul de J_dls pour éviter les singularités aka les positions avec sigma_min faible"""
         grad_sigma_min = self._sigma_min_gradient(self.q_state)
         activation = max(0, 1.0 - self.robot.sigma_min_value(self.q_state) / self.tuning["sigma_min_safe"]) # gain adaptatif : nul loin des singularités, croît quand on approche
-        return k * activation
+        return self.tuning["K_secondary_singularity"] * activation * grad_sigma_min
 
     def _dls_inverse(self, J, sigma_min):
         """Calcule  Pseudo inverse amortie adaptatif (adaptative DLS)"""
@@ -148,12 +150,6 @@ class Controller:
         # DLS inverse
         J_dls = self._dls_inverse(J, sigma_min)
 
-        # Tâche secondaire pour éviter les butées mécaniques
-        z = self._null_space_joint(self.robot.ranges, self.tuning["K_secondary_joint"])    #TODO à supprimer ou utiliser
-
-        # Tâche secondaire pour éviter les singularités
-        km_eff = self._null_space_singularity(self.tuning["K_secondary_singularity"])
-
         # Normalisation du gradiant pour la stabilité
         # norm_grad = np.linalg.norm(grad_sigma_min)
         # if norm_grad > 1e-8 :
@@ -163,12 +159,11 @@ class Controller:
 
         # Calcul de qdot
         NullSpace = np.eye(4) - J_dls @ J
-        grad_sigma_min = self._sigma_min_gradient(self.q_state)
-        qdot = J_dls @ V + km_eff * NullSpace @ grad_sigma_min #+  NullSpace @ z
+        qdot = J_dls @ V + NullSpace @ self._null_space_singularity() #+  NullSpace @ self._null_space_joint()
 
         # Limitation de qdot : on garde l'orientation du vecteur, mais on change sa norme
         norm = np.linalg.norm(qdot)
-        max_norm = 1.2
+        max_norm = self.tuning["max_norm"]
         if norm > max_norm :
             qdot = qdot * (max_norm/norm)
         
@@ -180,7 +175,7 @@ class Controller:
         """
 
         # Boucle temporelle
-        self.t = t
+        self.t = t - self.t_start
         dt = self.t - self.t_prev
         self.t_prev = self.t
 
@@ -193,6 +188,6 @@ class Controller:
 
         self.qdot = self.compute_qdot()
         self.q_state += self.qdot * dt
-        return
+        return self.qdot
 
 
