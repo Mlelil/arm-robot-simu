@@ -65,14 +65,15 @@ class App:
         self.root.geometry("110x750")
 
         # Styles
-        self.style = ttk.Style()
-        self.style.theme_use('clam')
-        self.style.configure('Title.TLabel', font=('Helvetica', 12, 'bold', 'underline'))
-        self.style.configure('Data.TLabel', font=('Consolas', 9), background='#dddddd', padding=5)
-        
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure('Title.TLabel', font=('Helvetica', 12, 'bold', 'underline'))
+        style.configure('Data.TLabel', font=('Consolas', 9), background='#dddddd', padding=5)
+    def _build_canvas(self):
+        """ Génère toutes le fenêtres : #TODO meilleure déf
+        figures, axe, canvas matplotlib
+        """
 
-    def _build_canvas(self): # fig, axes, canvas matplotlib
-        pass
     def _build_sidebar(self): # widgets tkinter
         pass
 
