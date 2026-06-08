@@ -70,9 +70,14 @@ class App:
         style.configure('Title.TLabel', font=('Helvetica', 12, 'bold', 'underline'))
         style.configure('Data.TLabel', font=('Consolas', 9), background='#dddddd', padding=5)
     def _build_canvas(self):
-        """ Génère toutes le fenêtres : #TODO meilleure déf
+        """ Génère la fenêtre principale avec la visualisation 3D du bras :
         figures, axe, canvas matplotlib
         """
+        fig = plt.figure(figsize=(7,7))
+        ax = fig.add_subplot(111, projection='3d')
+        self.canvas = FigureCanvasTkAgg(fig, master=self.root)
+        self.canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+
 
     def _build_sidebar(self):
         """Génère la sidebar, et widgets tkinter
@@ -80,7 +85,31 @@ class App:
         sidebar = tk.Frame(self.root, width=300, bg='#f0f0f0', padx=10, pady=10)
         sidebar.pack(side=tk.LEFT, fill=tk.Y)
         sidebar.pack_propagate(False) # Force la largeur
+        
+        # --- Section 1 : Commande Manuelle ---
+        ttk.Label(sidebar, text="Commande manuelle", style='Title.TLabel').pack(anchor='w', pady=(0, 10))
 
+        joint_vars=[]
+        for i, (min_value, max_value) in enumerate(self.robot.ranges):
+            frame_s = ttk.Frame(sidebar)
+            frame_s.pack(fill=tk.X, pady=2)
+
+            lbl = ttk.Label(frame_s, text=f"θ{i+1}", width=4)
+            lbl.pack(side=tk.LEFT)
+
+            var = tk.DoubleVar(value=(max_value+min_value)/2)
+            joint_vars.append(var)
+
+            # Slider
+            scl = ttk.Scale(frame_s, from_=min_value, to=max_value, orient=tk.HORIZONTAL, variable=var, command=update_from_sliders) #TODO
+            scl.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
+
+            # Affichage valeur numérique
+            val_lbl = ttk.Label(frame_s, text=f"{var.get()}°", width=6)
+            val_lbl.pack(side=tk.LEFT)
+            var.trace_add('write', lambda *args, l=val_lbl, x=var: l.config(text=f"{x.get():.1f}°"))
+        
+        ttk.Separator(sidebar, orient='horizontal').pack(fill='x', pady=15)
     # --- Run ---
     def run(self):
         self.root.mainloop()
