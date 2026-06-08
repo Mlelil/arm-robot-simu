@@ -55,8 +55,22 @@ class App:
         pass
     
     # --- Builders privés ---
-    def _build_window(self): # root, styles
-        pass
+    def _build_window(self):
+        """ Génère la fenêtre principale (root),
+        ainsi que les styles utilisés
+        """
+        # Fenêtre principale
+        self.root = tk.Tk()
+        self.root.title('Simulateur de Bras Robotisé v3')
+        self.root.geometry("110x750")
+
+        # Styles
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+        self.style.configure('Title.TLabel', font=('Helvetica', 12, 'bold', 'underline'))
+        self.style.configure('Data.TLabel', font=('Consolas', 9), background='#dddddd', padding=5)
+        
+
     def _build_canvas(self): # fig, axes, canvas matplotlib
         pass
     def _build_sidebar(self): # widgets tkinter
