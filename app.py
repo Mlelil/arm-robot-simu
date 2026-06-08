@@ -138,9 +138,27 @@ class App:
         btn_cancel.pack(pady=2)
 
         ttk.Separator(sidebar, orient="horizontal").pack(fill='x', pady=15)
+
+        # --- Section 3 : Trajectoires ---
+        ttk.Label(sidebar, text="Trajectoires", style='Title.TLabel').pack(anchor='w', pady=(0, 5))
+
+        traj_tools = ttk.Frame(sidebar)
+        traj_tools.pack(fill=tk.X, pady=5)
+
+        # 3 boutons : Pinceau (Start), Pause, Poubelle
+        btn_traj_play = tk.Button(traj_tools, text="✍", font=("Arial", 14), width=4, command=self._toggle_recording)
+        btn_traj_play.pack(side=tk.LEFT, padx=2)
+        btn_traj_pause = tk.Button(traj_tools, text="⏸", font=("Arial", 14), width=4, command=self._pause_recording)
+        btn_traj_pause.pack(side=tk.LEFT, padx=2)
+        btn_traj_del = tk.Button(traj_tools, text="🗑", font=("Arial", 14), width=4, command=self._clear_trajectory)
+        btn_traj_del.pack(side=tk.LEFT, padx=2)
+
+        ttk.Separator(sidebar, orient="horizontal").pack(fill='x', pady=15)
+
     # --- Run ---
     def run(self):
         self.root.mainloop()
+        #TODO fermer l'app dans le terminal quand je ferme l'app
 
 
 # --- Tests ---
