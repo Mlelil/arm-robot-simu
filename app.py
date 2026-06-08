@@ -29,9 +29,13 @@ class App:
     def _draw_robot(self, q):
         pass
 
-    # --- Callbacks Slider ---
+    # --- Callback Slider ---
     def _update_data_from_sliders(self, *args):
-        pass
+        """Callback appelé lorsqu'un slider est utilisé
+        Dessine le robot avec les angles souhaités"""
+        q = np.array([np.radians(var.get) for var in self.joint_vars])
+        # self.controller.q_state = q je ne pense pas que ce soit utile ici
+        self._draw_robot(q)
 
     # --- Boucle auto ---
     def _auto_step(self):
@@ -39,7 +43,37 @@ class App:
 
     # --- Callbacks Boutons ---
     def _apply_auto_command(self):
-        pass
+        """ Enregistre et lance la commande de déplacement automatique
+        à partir d'une commande cible dans l'espace cartésien"""
+
+        # On récupère les données entrées dans les champs X, Y, Z et 
+        # on vérifie que l'objectif est atteignable au vu de notre robot.
+        # Pour simplifier, on va supposer que tout point inclus dans 
+        # la demisphère supérieur (z>0) de rayon <= longueur du bras est admissible
+
+        try:
+            x_target = float(self.entry_x.get())
+            y_target = float(self.entry_y.get())
+            z_target = float(self.entry_z.get())
+
+            rayon_demisphere_admissible = float(sum(robot.length[1:]))
+            if z_target < 0 or x_target**2 + y_target**2 + z_target**2 > rayon_demisphere_admissible :
+                raise AssertionError
+            
+        except AssertionError:
+            messagebox.showerror("Erreur", "Veuillez entrer une cible atteignable")
+        except ValueError:
+            messagebox.showerror("Erreur", "Veuillez entrer des nombres valides")
+
+        #TODO !!
+        # message.showinfo de début de mouvement
+        # start_automotion(x,y,z t'as capté)
+
+
+        
+        
+        
+
     def _draw_trajectory(self):
         pass
     def _clear_trajectory(self):
@@ -88,7 +122,7 @@ class App:
         # --- Section 1 : Commande Manuelle ---
         ttk.Label(sidebar, text="Commande manuelle", style='Title.TLabel').pack(anchor='w', pady=(0, 10))
 
-        joint_vars=[]
+        self.joint_vars=[]
         for i, (min_value, max_value) in enumerate(self.robot.ranges):
             frame_s = ttk.Frame(sidebar)
             frame_s.pack(fill=tk.X, pady=2)
@@ -97,7 +131,7 @@ class App:
             lbl.pack(side=tk.LEFT)
 
             var = tk.DoubleVar(value=(max_value+min_value)/2)
-            joint_vars.append(var)
+            self.joint_vars.append(var)
 
             # Slider
             scl = ttk.Scale(frame_s, from_=min_value, to=max_value, orient=tk.HORIZONTAL, variable=var, command=self._update_data_from_sliders)
@@ -120,9 +154,9 @@ class App:
         inputs_frame = ttk.Frame(auto_frame)
         inputs_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        entry_x = ttk.Entry(inputs_frame, width=8); entry_x.grid(row=0, column=1, pady=2)
-        entry_y = ttk.Entry(inputs_frame, width=8); entry_y.grid(row=1, column=1, pady=2)
-        entry_z = ttk.Entry(inputs_frame, width=8); entry_z.grid(row=2, column=1, pady=2)
+        self.entry_x = ttk.Entry(inputs_frame, width=8); self.entry_x.grid(row=0, column=1, pady=2)
+        self.entry_y = ttk.Entry(inputs_frame, width=8); self.entry_y.grid(row=1, column=1, pady=2)
+        self.entry_z = ttk.Entry(inputs_frame, width=8); self.entry_z.grid(row=2, column=1, pady=2)
         ttk.Label(inputs_frame, text="x = ").grid(row=0, column=0)
         ttk.Label(inputs_frame, text="y = ").grid(row=1, column=0)
         ttk.Label(inputs_frame, text="z = ").grid(row=2, column=0)
