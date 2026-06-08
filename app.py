@@ -62,7 +62,7 @@ class App:
         # Fenêtre principale
         self.root = tk.Tk()
         self.root.title('Simulateur de Bras Robotisé v3')
-        self.root.geometry("110x750")
+        self.root.geometry("1100x750")
 
         # Styles
         style = ttk.Style()
@@ -74,10 +74,26 @@ class App:
         figures, axe, canvas matplotlib
         """
 
-    def _build_sidebar(self): # widgets tkinter
-        pass
+    def _build_sidebar(self):
+        """Génère la sidebar, et widgets tkinter
+        """
+        sidebar = tk.Frame(self.root, width=300, bg='#f0f0f0', padx=10, pady=10)
+        sidebar.pack(side=tk.LEFT, fill=tk.Y)
+        sidebar.pack_propagate(False) # Force la largeur
 
     # --- Run ---
     def run(self):
         self.root.mainloop()
 
+
+# --- Tests ---
+if __name__ == "__main__":
+    length = np.array([9, 15, 15, 10])
+    ranges = np.array([(-180, 180), (0, 180), (-180, 180), (-180, 180)])
+    robot = Robot(length, ranges)
+    controller = Controller(robot)
+    history = MotionHistory()
+
+    print("Creation de l'application")
+    app = App(robot, controller, history)
+    app.run()
