@@ -7,6 +7,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from robot import Robot
 from controller import Controller
 from history import MotionHistory
+import sys
 
 class App:
     def __init__(self, robot: Robot, controller: Controller, history: MotionHistory):
@@ -52,7 +53,7 @@ class App:
     def _reset_robot(self):
         pass
     def _emergency_stop(self):
-        pass
+        sys.exit()
     
     # --- Builders privés ---
     def _build_window(self):
@@ -77,8 +78,6 @@ class App:
         ax = fig.add_subplot(111, projection='3d')
         self.canvas = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-
-
     def _build_sidebar(self):
         """Génère la sidebar, et widgets tkinter
         """
@@ -94,7 +93,7 @@ class App:
             frame_s = ttk.Frame(sidebar)
             frame_s.pack(fill=tk.X, pady=2)
 
-            lbl = ttk.Label(frame_s, text=f"θ{i+1}", width=4)
+            lbl = ttk.Label(frame_s, text=f"θ{i+1}", width=5)
             lbl.pack(side=tk.LEFT)
 
             var = tk.DoubleVar(value=(max_value+min_value)/2)
@@ -140,7 +139,7 @@ class App:
         ttk.Separator(sidebar, orient="horizontal").pack(fill='x', pady=15)
 
         # --- Section 3 : Trajectoires ---
-        ttk.Label(sidebar, text="Trajectoires", style='Title.TLabel').pack(anchor='w', pady=(0, 5))
+        ttk.Label(sidebar, text="Trajectoire", style='Title.TLabel').pack(anchor='w', pady=(0, 5))
 
         traj_tools = ttk.Frame(sidebar)
         traj_tools.pack(fill=tk.X, pady=5)
@@ -154,6 +153,28 @@ class App:
         btn_traj_del.pack(side=tk.LEFT, padx=2)
 
         ttk.Separator(sidebar, orient="horizontal").pack(fill='x', pady=15)
+
+        # --- Section 4 : Données & Loupe ---
+        data_frame = ttk.Frame(sidebar)
+        data_frame.pack(fill=tk.X)
+        ttk.Label(data_frame, text="Données", style='Title.TLabel').pack(side=tk.LEFT)
+
+        # Bouton Loupe
+        btn_loupe = tk.Button(data_frame, text="🔍", font=("Arial", 12), command=self._open_analysis_window)
+        btn_loupe.pack(side=tk.RIGHT)
+
+        # Zone de texte / données supplémentaires
+        data_label = ttk.Label(sidebar, text="En attente de données...", style='Data.TLabel', anchor="nw", justify="left")
+        data_label.pack(fill=tk.X, pady=5, ipady=10)
+
+        # --- Section 5 : Bas de page (Reset/Stop) ---
+        spacer = tk.Frame(sidebar, height=20, bg='#f0f0f0')
+        spacer.pack(fill=tk.BOTH, expand=True)
+
+        reset_btn = tk.Button(sidebar, text="🔄 RESET ROBOT", bg="#13c543", fg="white", font=("Arial", 10, "bold"), command=self._reset_robot)
+        reset_btn.pack(fill=tk.X, pady=5)
+        stop_btn = tk.Button(sidebar, text="⛔ ARRÊT D'URGENCE", bg="#d72f1d", fg="white", font=("Arial", 10, "bold"), command=self._emergency_stop)
+        stop_btn.pack(fill=tk.X, pady=5)
 
     # --- Run ---
     def run(self):
