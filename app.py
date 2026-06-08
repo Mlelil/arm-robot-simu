@@ -101,7 +101,7 @@ class App:
             joint_vars.append(var)
 
             # Slider
-            scl = ttk.Scale(frame_s, from_=min_value, to=max_value, orient=tk.HORIZONTAL, variable=var, command=update_from_sliders) #TODO
+            scl = ttk.Scale(frame_s, from_=min_value, to=max_value, orient=tk.HORIZONTAL, variable=var, command=self._update_data_from_sliders)
             scl.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
 
             # Affichage valeur numérique
@@ -110,6 +110,34 @@ class App:
             var.trace_add('write', lambda *args, l=val_lbl, x=var: l.config(text=f"{x.get():.1f}°"))
         
         ttk.Separator(sidebar, orient='horizontal').pack(fill='x', pady=15)
+
+        # --- Section 2 : Commande Auto ---
+        ttk.Label(sidebar, text="Commande auto", style='Title.TLabel').pack(anchor='w', pady=(0, 5))
+
+        auto_frame = ttk.Frame(sidebar)
+        auto_frame.pack(fill=tk.X)
+
+        # Champs X, Y, Z
+        inputs_frame = ttk.Frame(auto_frame)
+        inputs_frame.pack(side=tk.LEFT, fill=tk.X, expand=True)
+
+        entry_x = ttk.Entry(inputs_frame, width=8); entry_x.grid(row=0, column=1, pady=2)
+        entry_y = ttk.Entry(inputs_frame, width=8); entry_y.grid(row=1, column=1, pady=2)
+        entry_z = ttk.Entry(inputs_frame, width=8); entry_z.grid(row=2, column=1, pady=2)
+        ttk.Label(inputs_frame, text="x = ").grid(row=0, column=0)
+        ttk.Label(inputs_frame, text="y = ").grid(row=1, column=0)
+        ttk.Label(inputs_frame, text="z = ").grid(row=2, column=0)
+
+        # Boutons Valider / Annuler (boutons carrés avec icônes)
+        btn_frame = ttk.Frame(auto_frame)
+        btn_frame.pack(side=tk.RIGHT, padx=5)
+
+        btn_ok = tk.Button(btn_frame, text="✔", bg="#2ecc71", fg="white", font=("Arial", 12, "bold"), width=3, command=self._apply_auto_command)
+        btn_ok.pack(pady=2)
+        btn_cancel = tk.Button(btn_frame, text="✖", bg="#e74c3c", fg="white", font=("Arial", 12, "bold"), width=3, command=self._emergency_stop)
+        btn_cancel.pack(pady=2)
+
+        ttk.Separator(sidebar, orient="horizontal").pack(fill='x', pady=15)
     # --- Run ---
     def run(self):
         self.root.mainloop()
