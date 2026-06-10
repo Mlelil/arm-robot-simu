@@ -39,8 +39,14 @@ class App:
         self._draw_robot(q)
 
     # --- Boucle auto ---
-    def _auto_step(self):
-        pass
+    def _auto_step(self): #TODO logique ici à faire
+        if self.controller.motion_done :
+            print("Motion over")
+            return 
+        
+        # c'est le contrôleur qui va vérifier que le mouvement doit s'arrêter, est terminé etc...
+        self.controller.step(time())    
+        self.root.after(20, self._auto_step)
 
     # --- Callbacks Boutons ---
     def _apply_auto_command(self):
@@ -61,7 +67,7 @@ class App:
             if z_target < 0 or x_target**2 + y_target**2 + z_target**2 > rayon_demisphere_admissible :
                 raise AssertionError
             
-            X = self.robot.forward_kinematics(self.controller.q_state)
+            X = self.controller.get_pos()
             messagebox.showinfo("Commande Auto", f"Now at : (x,y,z) = ({X[0]}, {X[1]}, {X[2]})\nTarget at: ({x_target}, {y_target}, {z_target})")
             #TODO lancer un programme dessinant en pointillé une trajectoire théorique que la main peut emprunter : une droite, une polynomiale, la vraie
             self.controller.start_motion(time(), X, np.array([x_target, y_target, z_target]))
