@@ -38,6 +38,7 @@ class Controller:
         self.T = max(float(np.linalg.norm(xf-x0)) / vmax, 1.0)
         self.t_start = t_start
         self.t_prev = self.t_start
+        self.motion_done = False
 
 
     def quintic_traj(self, t:float, T:float, X0:NDArray[np.float64], Xf:NDArray[np.float64]):
@@ -179,15 +180,25 @@ class Controller:
         dt = self.t - self.t_prev
         self.t_prev = self.t
 
+        # Si la durée du mvmt dépasse T, on arrête
         if self.t - self.t_start > self.T : self.motion_done = True
 
+        # Lorsqu'on est arrivés au terme du mouvement
         if self.motion_done :
             # Calcul de l'erreur MSE
             # Renvoyer la position finale
             return
 
+        # Dans la boucle, on calcule q_dot(t) et q(t)
         self.qdot = self.compute_qdot()
         self.q_state += self.qdot * dt
         return self.qdot
 
+    def get_pos(self):
+        """Return np.array([x(t), y(t), z(t)])"""
+        return self.robot.forward_kinematics(self.q_state)
 
+    def MSE(self, X0, X1):
+        """Return the Mean Squared Error (float) between two cartesian positions
+        Which is equivalent to the norm of their difference if im right""" #TODO verify
+        return np.sqrt(np.dot((X0-X1), (X0-X1)))
