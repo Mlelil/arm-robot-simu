@@ -8,6 +8,7 @@ from robot import Robot
 from controller import Controller
 from history import MotionHistory
 import sys
+from time import time
 
 class App:
     def __init__(self, robot: Robot, controller: Controller, history: MotionHistory):
@@ -56,23 +57,19 @@ class App:
             y_target = float(self.entry_y.get())
             z_target = float(self.entry_z.get())
 
-            rayon_demisphere_admissible = float(sum(robot.length[1:]))
+            rayon_demisphere_admissible = float(sum(robot.length[1:])) # la 1ere longueur est un entraxe et n'appartient pas vraiment au bras
             if z_target < 0 or x_target**2 + y_target**2 + z_target**2 > rayon_demisphere_admissible :
                 raise AssertionError
             
+            X = self.robot.forward_kinematics(self.controller.q_state)
+            messagebox.showinfo("Commande Auto", f"Now at : (x,y,z) = ({X[0]}, {X[1]}, {X[2]})\nTarget at: ({x_target}, {y_target}, {z_target})")
+            #TODO lancer un programme dessinant en pointillé une trajectoire théorique que la main peut emprunter : une droite, une polynomiale, la vraie
+            self.controller.start_motion(time(), X, np.array([x_target, y_target, z_target]))
+        
         except AssertionError:
             messagebox.showerror("Erreur", "Veuillez entrer une cible atteignable")
         except ValueError:
             messagebox.showerror("Erreur", "Veuillez entrer des nombres valides")
-
-        #TODO !!
-        # message.showinfo de début de mouvement
-        # start_automotion(x,y,z t'as capté)
-
-
-        
-        
-        
 
     def _draw_trajectory(self):
         pass
