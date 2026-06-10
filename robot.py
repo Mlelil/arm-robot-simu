@@ -17,7 +17,12 @@ class Robot:
         q:NDArray[np.float64]
     ) -> NDArray[np.float64]:
         """
-        Computes the forward kinematic problem for the end effector
+        Returns the coordinate of the hand
+        Inputs:
+            q : np.array.shape (4,) -> [q1, q2, q3, q4]
+            l : np.array.shape (4,)
+        Output :
+            x : np.array.shape(3,) -> [x, y, z]
         """
 
         """voir le rapport mathématique pour les formules
