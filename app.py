@@ -27,7 +27,13 @@ class App:
         
     
     # --- Dessin ---
-    def _draw_robot(self, q): 
+    def _draw_robot(self, q): #TODO aussi en cours ici
+        # 1. calculs cinématiques
+        # 2. Gestion du tracé de la trajectoire
+        # 3. Affichage matlplotlib
+        # 4. Dessin du repère effecteur
+        # 5. Dessin de la trajectoire^
+        # 6. Paramètres du graph
         pass
 
     # --- Callback Slider ---
