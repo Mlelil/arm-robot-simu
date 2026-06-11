@@ -43,6 +43,9 @@ class App:
         q = np.array([np.radians(var.get) for var in self.joint_vars])
         # self.controller.q_state = q je ne pense pas que ce soit utile ici
         self._draw_robot(q)
+        # TODO
+        # draw_robot(nouvelles valeurs manuelles)
+        # update_données textuelles
 
     # --- Boucle auto ---
     def _auto_step(self): #TODO logique ici à faire
