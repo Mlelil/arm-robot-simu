@@ -27,7 +27,7 @@ class App:
         
     
     # --- Dessin ---
-    def _draw_robot(self, q):
+    def _draw_robot(self, q): 
         pass
 
     # --- Callback Slider ---
@@ -46,6 +46,7 @@ class App:
         
         # c'est le contrôleur qui va vérifier que le mouvement doit s'arrêter, est terminé etc...
         self.controller.step(time())    
+        # TODO ajouter l'historique
         self.root.after(20, self._auto_step)
 
     # --- Callbacks Boutons ---
