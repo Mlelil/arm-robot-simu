@@ -40,7 +40,7 @@ class MotionHistory:
         """Supprime toutes les valeurs enregistrées"""
         self.__init__(self.maxlen)
 
-    def stocker(self, t:int, pos:np.ndarray, vel:np.ndarray, q:np.ndarray, qdot:np.ndarray, metrics:Dict[str, float]):
+    def stocker(self, pos:np.ndarray, vel:np.ndarray, q:np.ndarray, qdot:np.ndarray, metrics:Dict[str, float]):
         """
         Stocke une nouvelle ligne de données dans l'historique.
         
@@ -53,7 +53,7 @@ class MotionHistory:
             metrics (Dict): Dictionnaire contenant les calculs (sigma, conditionnement, etc...)
         """
 
-        self.history["t"].append(t)
+        self.history["t"].append(self.history["t"][-1] + 1)
         self.history["x"].append(pos[0])
         self.history["y"].append(pos[1])
         self.history["z"].append(pos[2])
