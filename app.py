@@ -111,6 +111,7 @@ class App:
         self.root = tk.Tk()
         self.root.title('Simulateur de Bras Robotisé v3')
         self.root.geometry("1100x750")
+        self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
 
         # Styles
         style = ttk.Style()
@@ -223,11 +224,16 @@ class App:
         stop_btn = tk.Button(sidebar, text="⛔ ARRÊT D'URGENCE", bg="#d72f1d", fg="white", font=("Arial", 10, "bold"), command=self._emergency_stop)
         stop_btn.pack(fill=tk.X, pady=5)
 
+    def _on_closing(self):
+        """Appelée quand on appuie sur la croix qui ferme l'app"""
+        print("Fermeture de l'application")
+        self.root.quit()    # stop le mainloop
+        self.root.destroy() # ferme les widgets tranquillement
+
     # --- Run ---
     def run(self):
         self.root.mainloop()
-        #TODO fermer l'app dans le terminal quand je ferme l'app
-
+        sys.exit(0)
 
 # --- Tests ---
 if __name__ == "__main__":
