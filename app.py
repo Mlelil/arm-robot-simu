@@ -69,8 +69,9 @@ class App:
         """Callback appelé lorsqu'un slider est utilisé
         Dessine le robot avec les angles souhaités"""
         #TODO erreur ici :
-        # loop of ufunc does not support argument 0 of type method has no callable radians method
-        q = np.array([np.radians(var.get) for var in self.joint_vars])
+        # loop of ufunc does not support argument 0 of type method has no callable radians method - ok
+        # 
+        q = np.array([radians(var.get) for var in self.joint_vars])
         # self.controller.q_state = q je ne pense pas que ce soit utile ici
         self._draw_robot(q)
         # TODO
@@ -176,6 +177,7 @@ class App:
             lbl.pack(side=tk.LEFT)
 
             var = tk.DoubleVar(value=(max_value+min_value)/2)
+            print(var) # TODO var n'est ptet pas un nombre
             self.joint_vars.append(var)
 
             # Slider
