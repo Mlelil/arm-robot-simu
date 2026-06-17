@@ -9,6 +9,7 @@ from controller import Controller
 from history import MotionHistory
 import sys
 from time import time
+from math import radians
 
 class App:
     def __init__(self, robot: Robot, controller: Controller, history: MotionHistory):
@@ -28,18 +29,47 @@ class App:
     
     # --- Dessin ---
     def _draw_robot(self, q): #TODO aussi en cours ici
+        """Dessine le robot"""
         # 1. calculs cinématiques
+        x_list, y_list, z_list = self.robot.complete_forward_kinematics(q)
+        x_hand, y_hand, z_hand = x_list[-1], y_list[-1], z_list[-1]
+
         # 2. Gestion du tracé de la trajectoire
+
         # 3. Affichage matlplotlib
+        self.ax.clear()
+
         # 4. Dessin du repère effecteur
-        # 5. Dessin de la trajectoire^
-        # 6. Paramètres du graph
+        colors = ['#555555', '#E74C3C', '#2ECC71', '#3498DB']
+        widths = [6, 5, 4, 3]
+        for i in range(4):
+            self.ax.plot(x_list[i:i+2], y_list[i:i+2], z_list[i:i+2], color=colors[i], linewidth=widths[i], solid_capstyle='round')
+        self.ax.scatter(x_list, y_list, z_list, s=80, c='black', zorder=10)
+        
+        R_hand = self.robot.compute_rotation(q)
+        length = 8
+        self.ax.quiver(x_hand, y_hand, z_hand, R_hand[0,0], R_hand[1,0], R_hand[2,0], color='blue', length=length)
+        self.ax.quiver(x_hand, y_hand, z_hand, R_hand[0,1], R_hand[1,1], R_hand[2,1], color='green', length=length)
+        self.ax.quiver(x_hand, y_hand, z_hand, R_hand[0,2], R_hand[1,2], R_hand[2,2], color='red', length=length)
+
+
+        limit = 45
+        self.ax.set_xlim((-limit, limit)); self.ax.set_ylim((-limit, limit)); self.ax.set_zlim((0, limit))
+        self.ax.set_xlabel('X'); self.ax.set_ylabel('Y'); self.ax.set_zlabel('Z')
+        self.ax.set_title("Simulation Cinématique")
+        
+        self.canvas.draw()
+        
+        # 5. Mise à jour des données textuelles
+        # self._update_data_display(q, hand_x, hand_y, hand_z)
         pass
 
     # --- Callback Slider ---
     def _update_data_from_sliders(self, *args):
         """Callback appelé lorsqu'un slider est utilisé
         Dessine le robot avec les angles souhaités"""
+        #TODO erreur ici :
+        # loop of ufunc does not support argument 0 of type method has no callable radians method
         q = np.array([np.radians(var.get) for var in self.joint_vars])
         # self.controller.q_state = q je ne pense pas que ce soit utile ici
         self._draw_robot(q)
@@ -73,6 +103,7 @@ class App:
             y_target = float(self.entry_y.get())
             z_target = float(self.entry_z.get())
 
+            #TODO ça marche pas la formule
             rayon_demisphere_admissible = float(sum(robot.length[1:])) # la 1ere longueur est un entraxe et n'appartient pas vraiment au bras
             if z_target < 0 or x_target**2 + y_target**2 + z_target**2 > rayon_demisphere_admissible :
                 raise AssertionError
@@ -123,7 +154,7 @@ class App:
         figures, axe, canvas matplotlib
         """
         fig = plt.figure(figsize=(7,7))
-        ax = fig.add_subplot(111, projection='3d')
+        self.ax = fig.add_subplot(111, projection='3d')
         self.canvas = FigureCanvasTkAgg(fig, master=self.root)
         self.canvas.get_tk_widget().pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
     def _build_sidebar(self):
