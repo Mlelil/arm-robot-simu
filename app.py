@@ -30,7 +30,6 @@ class App:
     # --- Dessin ---
     def _draw_robot(self, q): #TODO aussi en cours ici
         """Dessine le robot"""
-        print(q)
         # 1. calculs cinématiques
         x_list, y_list, z_list = self.robot.complete_forward_kinematics(q)
         x_hand, y_hand, z_hand = x_list[-1], y_list[-1], z_list[-1]
@@ -70,7 +69,7 @@ class App:
         """Callback appelé lorsqu'un slider est utilisé
         Dessine le robot avec les angles souhaités"""
         q = np.array([radians(var.get()) for var in self.joint_vars])
-        # self.controller.q_state = q je ne pense pas que ce soit utile ici
+        self.controller.q_state = q
         self._draw_robot(q)
         # TODO
         # draw_robot(nouvelles valeurs manuelles)
@@ -101,14 +100,14 @@ class App:
             x_target = float(self.entry_x.get())
             y_target = float(self.entry_y.get())
             z_target = float(self.entry_z.get())
+            print(x_target, y_target, z_target)
 
-            #TODO ça marche pas la formule
             rayon_demisphere_admissible = float(sum(robot.length[1:])) # la 1ere longueur est un entraxe et n'appartient pas vraiment au bras
-            if z_target < 0 or x_target**2 + y_target**2 + z_target**2 > rayon_demisphere_admissible :
+            if z_target < 0 or np.sqrt(x_target**2 + y_target**2 + z_target**2) > rayon_demisphere_admissible :
                 raise AssertionError
             
             X = self.controller.get_pos()
-            messagebox.showinfo("Commande Auto", f"Now at : (x,y,z) = ({X[0]}, {X[1]}, {X[2]})\nTarget at: ({x_target}, {y_target}, {z_target})")
+            messagebox.showinfo("Commande Auto", f"Now at: ({X[0]:.1f}, {X[1]:.1f}, {X[2]:.1f})\nTarget at: ({x_target:.1f}, {y_target:.1f}, {z_target:.1f})")
             #TODO lancer un programme dessinant en pointillé une trajectoire théorique que la main peut emprunter : une droite, une polynomiale, la vraie
             self.controller.start_motion(time(), X, np.array([x_target, y_target, z_target]))
         
