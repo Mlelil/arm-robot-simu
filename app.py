@@ -61,6 +61,7 @@ class App:
         self.canvas.draw()
         
         # 5. Mise à jour des données textuelles
+        self._update_label_data()
         # self._update_data_display(q, hand_x, hand_y, hand_z)
         pass
 
@@ -74,6 +75,18 @@ class App:
         # TODO
         # draw_robot(nouvelles valeurs manuelles)
         # update_données textuelles
+    def _update_label_data(self):
+        """Mets à jour l'affichage dans le panneau à gauche"""
+        x,y,z = self.controller.get_pos()
+        text = (
+            f"Pos Actuelle:\n  X: {x:.1f} | Y: {y:.1f} | Z: {z:.1f}\n\n"
+            f"Métriques:\n"
+            f"  ||q_dot||: à définir\n"
+            f"  det(JJᵀ): à définir\n" # Tu pourras appeler ta fonction jacobian() ici
+            f"  cond_J : à définir\n"# ||q_dot||
+            f"  sigma_min : à définir"
+        )
+        self.data_label.config(text=text) 
 
     # --- Boucle auto ---
     def _auto_step(self): #TODO logique ici à faire
@@ -241,8 +254,8 @@ class App:
         btn_loupe.pack(side=tk.RIGHT)
 
         # Zone de texte / données supplémentaires
-        data_label = ttk.Label(sidebar, text="En attente de données...", style='Data.TLabel', anchor="nw", justify="left")
-        data_label.pack(fill=tk.X, pady=5, ipady=10)
+        self.data_label = ttk.Label(sidebar, text="En attente de données...", style='Data.TLabel', anchor="nw", justify="left")
+        self.data_label.pack(fill=tk.X, pady=5, ipady=10)
 
         # --- Section 5 : Bas de page (Reset/Stop) ---
         spacer = tk.Frame(sidebar, height=20, bg='#f0f0f0')
