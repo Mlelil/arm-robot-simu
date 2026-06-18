@@ -30,6 +30,7 @@ class App:
     # --- Dessin ---
     def _draw_robot(self, q): #TODO aussi en cours ici
         """Dessine le robot"""
+        print(q)
         # 1. calculs cinématiques
         x_list, y_list, z_list = self.robot.complete_forward_kinematics(q)
         x_hand, y_hand, z_hand = x_list[-1], y_list[-1], z_list[-1]
@@ -68,9 +69,6 @@ class App:
     def _update_data_from_sliders(self, *args):
         """Callback appelé lorsqu'un slider est utilisé
         Dessine le robot avec les angles souhaités"""
-        #TODO erreur ici :
-        # loop of ufunc does not support argument 0 of type method has no callable radians method - ok
-        # 
         q = np.array([radians(var.get()) for var in self.joint_vars])
         # self.controller.q_state = q je ne pense pas que ce soit utile ici
         self._draw_robot(q)
@@ -176,7 +174,7 @@ class App:
             lbl = ttk.Label(frame_s, text=f"θ{i+1}", width=5)
             lbl.pack(side=tk.LEFT)
 
-            var = tk.DoubleVar(value=(max_value+min_value)/2)
+            var = tk.DoubleVar(value=0) # (max_value+min_value)/2
             self.joint_vars.append(var)
 
             # Slider
