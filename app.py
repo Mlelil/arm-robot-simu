@@ -71,7 +71,7 @@ class App:
         #TODO erreur ici :
         # loop of ufunc does not support argument 0 of type method has no callable radians method - ok
         # 
-        q = np.array([radians(var.get) for var in self.joint_vars])
+        q = np.array([radians(var.get()) for var in self.joint_vars])
         # self.controller.q_state = q je ne pense pas que ce soit utile ici
         self._draw_robot(q)
         # TODO
@@ -177,7 +177,6 @@ class App:
             lbl.pack(side=tk.LEFT)
 
             var = tk.DoubleVar(value=(max_value+min_value)/2)
-            print(var) # TODO var n'est ptet pas un nombre
             self.joint_vars.append(var)
 
             # Slider
@@ -270,7 +269,7 @@ class App:
 
 # --- Tests ---
 if __name__ == "__main__":
-    length = np.array([9, 15, 15, 10])
+    length = np.array([9, 15, 15, 5])
     ranges = np.array([(-180, 180), (0, 180), (-180, 180), (-180, 180)])
     robot = Robot(length, ranges)
     controller = Controller(robot)
