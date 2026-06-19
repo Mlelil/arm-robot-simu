@@ -19,6 +19,14 @@ class App:
 
         # États GUI
         self.is_recording = False # par exemple
+        self.metrics = {
+            "sigma_min" : 0,
+            "sigma_max" : 0,
+            "cond_J"    : 0,
+            "det(JJT)"  : 0,
+            "||q_dot||" : 0,
+            "error_norm": 0   
+        }
 
         # Construction dans l'ordre
         self._build_window()
@@ -73,10 +81,10 @@ class App:
         self.controller.q_state = q
         self._draw_robot(q)
         # en commande manuelle, on n'a ni erreur, ni vitesse
-        metrics = self.robot.get_kinematics_metrics(q)
-        metrics["error_norm"] = 0.0
+        self.metrics = self.robot.get_kinematics_metrics(q)
+        self.metrics["error_norm"] = 0.0
         X = self.robot.forward_kinematics(q)
-        self.history.stocker(X, np.zeros(4), q, np.zeros(4), metrics)
+        self.history.stocker(X, np.zeros(4), q, np.zeros(4), self.metrics)
 
     def _update_label_data(self):
         """Mets à jour l'affichage dans le panneau à gauche"""
@@ -84,10 +92,11 @@ class App:
         text = (
             f"Pos Actuelle:\n  X: {x:.1f} | Y: {y:.1f} | Z: {z:.1f}\n\n"
             f"Métriques:\n"
-            f"  ||q_dot||: à définir\n"
-            f"  det(JJᵀ): à définir\n" # Tu pourras appeler ta fonction jacobian() ici
-            f"  cond_J : à définir\n"# ||q_dot||
-            f"  sigma_min : à définir"
+            f"  ||q_dot|| : {self.metrics["||q_dot||"]}\n"
+            f"  det(JJᵀ)  : {self.metrics["det(JJT)"]}\n"
+            f"  cond_J    : {self.metrics["cond_J"]}\n"
+            f"  sigma_max : {self.metrics["sigma_max"]}\n"
+            f"  sigma_min : {self.metrics["sigma_min"]}\n"
         )
         self.data_label.config(text=text) 
 
