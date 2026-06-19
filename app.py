@@ -44,16 +44,16 @@ class App:
 
         # 2. Gestion du tracé de la trajectoire
 
-        # 3. Affichage matlplotlib
         self.ax.clear()
 
-        # 4. Dessin du repère effecteur
+        # dessin du repère effecteur
         colors = ['#555555', '#E74C3C', '#2ECC71', '#3498DB']
         widths = [6, 5, 4, 3]
         for i in range(4):
             self.ax.plot(x_list[i:i+2], y_list[i:i+2], z_list[i:i+2], color=colors[i], linewidth=widths[i], solid_capstyle='round')
         self.ax.scatter(x_list, y_list, z_list, s=80, c='black', zorder=10)
         
+        # dessin de la main
         R_hand = self.robot.compute_rotation(q)
         length = 8
         self.ax.quiver(x_hand, y_hand, z_hand, R_hand[0,0], R_hand[1,0], R_hand[2,0], color='blue', length=length)
@@ -101,18 +101,29 @@ class App:
         self.data_label.config(text=text) 
 
     # --- Boucle auto ---
-    def _auto_step(self): #TODO logique ici à faire
+    def _continue_auto_motion(self): #TODO logique ici à faire
         if self.controller.motion_done :
             print("Motion over")
             return 
         
-        # c'est le contrôleur qui va vérifier que le mouvement doit s'arrêter, est terminé etc...
         self.controller.step(time())    
-        # TODO ajouter l'historique
-        self.root.after(20, self._auto_step)
+
+        # on stocke les infos et on les affiche
+        q = self.controller.q_state
+        print(f"q : {q}")
+        X_now = self.robot.forward_kinematics(q)
+        self.metrics = self.robot.get_kinematics_metrics(q)
+        self.metrics["error_norm"] = self.controller.MSE()
+        self.history.stocker(X_now, self.controller.V, q, self.controller.qdot, self.metrics)
+        self._update_label_data
+
+        # on dessine le robot
+        self._draw_robot(q)
+
+        self.root.after(20, self._continue_auto_motion)
 
     # --- Callbacks Boutons ---
-    def _apply_auto_command(self):
+    def _start_auto_motion(self):
         """ Enregistre et lance la commande de déplacement automatique
         à partir d'une commande cible dans l'espace cartésien"""
 
@@ -134,7 +145,9 @@ class App:
             X = self.controller.get_pos()
             messagebox.showinfo("Commande Auto", f"Now at: ({X[0]:.1f}, {X[1]:.1f}, {X[2]:.1f})\nTarget at: ({x_target:.1f}, {y_target:.1f}, {z_target:.1f})")
             #TODO lancer un programme dessinant en pointillé une trajectoire théorique que la main peut emprunter : une droite, une polynomiale, la vraie
+            print("On lance la commande auto")
             self.controller.start_motion(time(), X, np.array([x_target, y_target, z_target]))
+            self._continue_auto_motion()
         
         except AssertionError:
             messagebox.showerror("Erreur", "Veuillez entrer une cible atteignable")
@@ -233,7 +246,7 @@ class App:
         btn_frame = ttk.Frame(auto_frame)
         btn_frame.pack(side=tk.RIGHT, padx=5)
 
-        btn_ok = tk.Button(btn_frame, text="✔", bg="#2ecc71", fg="white", font=("Arial", 12, "bold"), width=3, command=self._apply_auto_command)
+        btn_ok = tk.Button(btn_frame, text="✔", bg="#2ecc71", fg="white", font=("Arial", 12, "bold"), width=3, command=self._start_auto_motion)
         btn_ok.pack(pady=2)
         btn_cancel = tk.Button(btn_frame, text="✖", bg="#e74c3c", fg="white", font=("Arial", 12, "bold"), width=3, command=self._emergency_stop)
         btn_cancel.pack(pady=2)
