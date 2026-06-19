@@ -19,6 +19,8 @@ class Controller:
         self.robot       = robot                # Dépendance de la classe Robot
         self.tuning      = tuning               # Variables de contrôle
         self.q_state     = q_state              # Position articulaire à l'instant t
+        self.V           = np.zeros(3)
+        self.qdot        = np.zeros(4)
         self.motion_done = False                # Faux si un mouvement est en cours
         self.x0         : np.ndarray            # Position initiale du mouvement
         self.xf         : np.ndarray            # Position finale du mouvement
@@ -36,6 +38,7 @@ class Controller:
         self.x0 = x0
         self.xf = xf
         self.T = max(float(np.linalg.norm(xf-x0)) / vmax, 1.0)
+        print(f"Durée du mouvement : {self.T}")
         self.t_start = t_start
         self.t_prev = self.t_start
         self.motion_done = False
@@ -146,7 +149,7 @@ class Controller:
 
         # On récupère la vitesse cartésienne désirée pour notre trajectoire
         X_desire, V_desire = self.quintic_traj(self.t, self.T, self.x0, self.xf)
-        V = self.cartesian_controller(X, X_desire, V_desire, Kp_eff)
+        self.V = self.cartesian_controller(X, X_desire, V_desire, Kp_eff)
 
         # DLS inverse
         J_dls = self._dls_inverse(J, sigma_min)
@@ -160,7 +163,7 @@ class Controller:
 
         # Calcul de qdot
         NullSpace = np.eye(4) - J_dls @ J
-        qdot = J_dls @ V + NullSpace @ self._null_space_singularity() #+  NullSpace @ self._null_space_joint()
+        qdot = J_dls @ self.V + NullSpace @ self._null_space_singularity() #+  NullSpace @ self._null_space_joint()
 
         # Limitation de qdot : on garde l'orientation du vecteur, mais on change sa norme
         norm = np.linalg.norm(qdot)
@@ -201,5 +204,6 @@ class Controller:
     def MSE(self):
         """Return the Mean Squared Error (float) between two cartesian positions
         Which is equivalent to the norm of their difference if im right""" #TODO verify
-        # return np.sqrt(np.dot((X0-X1), (X0-X1)))
-        return np.std(self.xf, self.get_pos())
+        X0, X1 = self.xf, self.get_pos()
+        return np.sqrt(np.dot((X0-X1), (X0-X1))) / 3
+        # return np.std(self.xf, self.get_pos())
