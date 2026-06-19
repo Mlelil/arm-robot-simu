@@ -32,8 +32,8 @@ class Robot:
         cij = cos(qi + qj) / sij = sin(qi + qj)
         """
 
-        if not self.motion_allowed(q):
-            raise ValueError("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        # if not self.motion_allowed(q):
+        #     raise ValueError("Le mouvement est impossible: q ne respecte pas les limites imposées")
         
 
         q1, q2, q3, _ = q
@@ -57,8 +57,8 @@ class Robot:
         Computes the forward kinematic problem for all the joints
         """
 
-        if self.motion_allowed(q) == False :
-            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        # if self.motion_allowed(q) == False :
+        #     raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
         
         q1, q2, q3, q4 = q
         l1, l2, l3, l4 = self.length
@@ -89,8 +89,8 @@ class Robot:
         Computes the global rotational matrix of the arm
         """
         
-        if self.motion_allowed(q) == False :
-            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        # if self.motion_allowed(q) == False :
+        #     raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
 
         # La matrice de rotation globale est simplifiée pour l'affichage
         q1, q2, q3, q4 = q
@@ -108,8 +108,8 @@ class Robot:
         Computes the Jacobian matrix
         """
 
-        if self.motion_allowed(q) == False :
-            raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
+        # if self.motion_allowed(q) == False :
+        #     raise Exception("Le mouvement est impossible: q ne respecte pas les limites imposées")
         
         q1, q2, q3, _ = q
         _, l2, l3, l4 = self.length
