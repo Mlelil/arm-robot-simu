@@ -159,7 +159,19 @@ class Robot:
         J = self.jacobian(q_state)[0:3, :]
         S = np.linalg.svd(J, compute_uv=False)
         return S.min()
-
+    def get_kinematics_metrics(self, q:np.ndarray, qdot:np.ndarray = np.zeros(4)):
+        """Calcule et renvoie toutes les métriques cinématiques liées à la position actuelle"""
+        J = self.jacobian(q)[0:3, :]
+        U, S, Vt = np.linalg.svd(J)
+        sigma_min = S.min()
+        sigma_max = S.max()
+        return {
+            "sigma_min" : sigma_min,
+            "sigma_max" : sigma_max,
+            "cond_J"    : sigma_max/sigma_min if sigma_min > 0 else float('inf'),
+            "det(JJT)"  : np.linalg.det(J @ J.T),
+            "||q_dot||" : np.linalg.norm(qdot)   
+        }
 
 
 # ==========================================
