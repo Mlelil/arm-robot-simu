@@ -68,13 +68,16 @@ class App:
     # --- Callback Slider ---
     def _update_data_from_sliders(self, *args):
         """Callback appelé lorsqu'un slider est utilisé
-        Dessine le robot avec les angles souhaités"""
+        Dessine le robot, et stock les infos de la commande manuelle"""
         q = np.array([radians(var.get()) for var in self.joint_vars])
         self.controller.q_state = q
         self._draw_robot(q)
-        # TODO
-        # draw_robot(nouvelles valeurs manuelles)
-        # update_données textuelles
+        # en commande manuelle, on n'a ni erreur, ni vitesse
+        metrics = self.robot.get_kinematics_metrics(q)
+        metrics["error_norm"] = 0.0
+        X = self.robot.forward_kinematics(q)
+        self.history.stocker(X, np.zeros(4), q, np.zeros(4), metrics)
+
     def _update_label_data(self):
         """Mets à jour l'affichage dans le panneau à gauche"""
         x,y,z = self.controller.get_pos()
