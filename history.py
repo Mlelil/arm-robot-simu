@@ -53,7 +53,7 @@ class MotionHistory:
             metrics (Dict): Dictionnaire contenant les calculs (sigma, conditionnement, etc...)
         """
 
-        self.history["t"].append(self.history["t"][-1] + 1)
+        self.history["t"].append((self.history["t"][-1] + 1) if self.history["t"] else 0)
         self.history["x"].append(pos[0])
         self.history["y"].append(pos[1])
         self.history["z"].append(pos[2])
