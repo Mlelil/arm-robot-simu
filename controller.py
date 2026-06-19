@@ -198,7 +198,8 @@ class Controller:
         """Return np.array([x(t), y(t), z(t)])"""
         return self.robot.forward_kinematics(self.q_state)
 
-    def MSE(self, X0, X1):
+    def MSE(self):
         """Return the Mean Squared Error (float) between two cartesian positions
         Which is equivalent to the norm of their difference if im right""" #TODO verify
-        return np.sqrt(np.dot((X0-X1), (X0-X1)))
+        # return np.sqrt(np.dot((X0-X1), (X0-X1)))
+        return np.std(self.xf, self.get_pos())
